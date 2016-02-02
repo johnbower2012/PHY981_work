@@ -1,0 +1,24 @@
+Separation Energies:
+		Across the board we see interesting effects in the separation energies as the
+	neutron	counts vary from even to odd, and as they cross magic numbers. 
+		We see that pairing effects produce marked differences from even to odd neutron
+	counts, that is an increase in single neutron separation energy for (Pauli) paired 
+	neutrons in even counts and a descrease for the unpaired neutron in an odd count. 
+		Additionally, we see magic number effects in the neutron counts. That is as we
+	pass magic number (full shell) neutron counts we see a marked descrease in separation
+	energies. The specific neutron magic numbers are given below.
+	
+		Oxygen: 8
+		Fluorine: 8
+		Calcium: 20, 28
+		Nickel: 82
+		Tin: 82
+		Lead: 126
+
+Liquid Drop Binding Energy:
+		
+
+Dripline: 
+		We see that the prediction for the dripline differs from the fluorine data in that
+	data shows the dripline at 22 but the liquid drop model predicts 18. 
+		
