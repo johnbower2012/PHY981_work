@@ -1,13 +1,15 @@
 Separation Energies:
 		Across the board we see interesting effects in the separation energies as the
 	neutron	counts vary from even to odd, and as they cross magic numbers. 
-		We see that pairing effects produce marked differences from even to odd neutron
-	counts, that is an increase in single neutron separation energy for (Pauli) paired 
-	neutrons in even counts and a descrease for the unpaired neutron in an odd count. 
-		Additionally, we see magic number effects in the neutron counts. That is as we
-	pass magic number (full shell) neutron counts we see a marked descrease in separation
+		We see in the data that pairing effects produce marked differences from even to 
+	odd neutron counts, that is we see an increase in single neutron separation energy for (Pauli)	
+	paired neutrons in even counts and a decrease for the unpaired neutron in an odd count.
+		Additionally, we see in the data magic number effects in the neutron counts. That is 
+	as we pass magic number (full shell) neutron counts we see a marked descrease in separation
 	energies as we begin to populate the next shell. The specific neutron magic numbers we 
 	observe on each graph are given below.
+		 The liquid drop model is deficient in that it lacks these effects, shown in all cases 
+	by its smooth, monotonic decreasing as n increases.
 	
 		Oxygen: 8
 		Fluorine: 8
