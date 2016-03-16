@@ -26,6 +26,7 @@ int main(int argc, char* argv[]){
 	double** D, **R, **eigenvalues;
 	char* outfilename;
 	double d, g, tolerance, time;
+	double aplus, aminus, c1plussq, c1minussq, c2plussq, c2minussq;
 	int eigvec_yesno = 1;
 	int i, j, k, rows, columns, n, count;
 	clock_t start, finish;
@@ -42,6 +43,29 @@ int main(int argc, char* argv[]){
 		columns = rows;
 		d = atof(argv[3]);
 		g = atof(argv[4]);
+	}
+//test case for rows=2
+	if(rows==2){
+		aplus = 3.0*d - g + sqrt(g*g + d*d);
+		aminus = 3.0*d - g - sqrt(g*g + d*d);
+		if(g!=0){
+			c1plussq = g*g/(4.0*d*d + 2.0*g*g + aplus*aplus - 4.0*d*g - 4.0*d*aplus + 2.0*g*aplus);
+			c1minussq = g*g/(4.0*d*d + 2.0*g*g + aminus*aminus - 4.0*d*g - 4.0*d*aminus + 2.0*g*aminus);
+			c2plussq = 1.0 - c1plussq;
+			c2minussq = 1.0 - c1minussq;
+		}
+		else{
+			c1plussq = 0;
+			c2plussq = 1;
+			c1minussq = 1;
+			c2minussq = 0;
+		}
+		cout << "\neigenvalues_plus\t" << aplus << endl;
+		cout << "eigenvector_plus:\t" << -sqrt(c1plussq) << '\t' << sqrt(c2plussq) << endl;
+		cout << "normalization:\t" << c1plussq + c1minussq << endl;
+		cout << "\neigenvalues_plus\t" << aminus << endl;
+		cout << "eigenvector_minus:\t" << sqrt(c1minussq) << '\t' << sqrt(c2minussq) << endl;
+		cout << "normalization:\t" << c2plussq + c2minussq << endl;
 	}
 //allocate matrices
 	matrix_alloc(eigenvalues,rows,2);
@@ -60,6 +84,8 @@ int main(int argc, char* argv[]){
 		eigenvalues[i][0] = 0.0;
 		eigenvalues[i][1] = -1.0;
 	}
+
+	cout << "\noriginal matrix:" << endl;
 	matrix_print(D,rows,rows);
 
 //Conduct similarity rotations until all offdiag elements < tolerance
@@ -94,8 +120,16 @@ int main(int argc, char* argv[]){
 	}
 	ofile.close();
 	cout.precision(5);
-	cout << endl;
+	cout << endl << "eigenvalues:" << endl;
 	matrix_print(eigenvalues,rows,2);
+	cout << endl << "eigenvectors:" << endl;	
+	for(i=0;i<rows;i++){
+		for(j=0;j<columns;j++){
+			k=eigenvalues[j][1];
+			cout << '\t' << R[i][k];
+		}
+		cout << endl;
+	}
 
 	matrix_delete(eigenvalues,rows);
 	matrix_delete(D,rows);
