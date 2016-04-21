@@ -8,51 +8,40 @@ using namespace std;
 ofstream ofile;
 ifstream ifile;
 
-inline void array_alloc(bool*& a, int n);
-inline void array_delete(bool*& a);
-inline void array_alloc(int*& a, int n);
-inline void array_delete(int*& a);
-inline void array_resize(int*& array, int oldsize, int newsize);
-inline void matrix_alloc(bool**& a, int rows, int columns);
-inline void matrix_delete(bool**& a, int rows);
-inline void matrix_alloc(double**& a, int rows, int columns);
-inline void matrix_delete(double**& a, int rows);
-inline void factorial(int& factorial, int n);
-inline void choose(int& choose, int n, int m);
-inline void construct_stateset(bool**& stateset, int& count, int n, int m);
-inline void print_stateset(bool**& stateset, int statecount, int n);
-inline void create(bool*&, int i);
-inline void annihilate(bool*& a, int i);
-inline void countfilledstates(bool*& a, int& onecount, int n);
-inline void overlap(bool*& a, bool*& b, bool& test, int n);
-inline void overlap(bool*& a, bool*& b, int& test, int n);	
-inline void h0_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double d);
-inline void h1_pairs(bool*& a, bool*& b, double& energy, int n, double g);
-inline void h_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double g, double d);
-inline void zedangularmomentum(bool*& a, int& zedangmom, int omega, int n);
-inline void detectpairs(bool*& a, bool& test, int omega, int n);
-inline void count_zedproj_pairs(bool**& stateset, int*& list, int zedangmom, int statecount, int omega, int n){
-	int i, j, zproj, count;
-	bool test;
-	count = 0;
-	for(i=0;i<statecount;i++){
-		zedangularmomentum(stateset[i], zproj, omega, n);
-		detectpairs(stateset[i], test, omega, n);
-		if(zproj==zedangmom&&test==true){
-			list[count] = i;
-			count++;
-		}
-	}
-}
-
+void array_alloc(bool*& a, int n);
+void array_delete(bool*& a);
+void array_alloc(int*& a, int n);
+void array_delete(int*& a);
+void array_resize(int*& array, int oldsize, int newsize);
+void matrix_alloc(bool**& a, int rows, int columns);
+void matrix_delete(bool**& a, int rows);
+void matrix_alloc(double**& a, int rows, int columns);
+void matrix_delete(double**& a, int rows);
+void factorial(int& factorial, int n);
+void choose(int& choose, int n, int m);
+void construct_stateset(bool**& stateset, int& count, int n, int m);
+void print_stateset(bool**& stateset, int statecount, int n);
+void create(bool*&, int i);
+void annihilate(bool*& a, int i);
+void countfilledstates(bool*& a, int& onecount, int n);
+void overlap(bool*& a, bool*& b, bool& test, int n);
+void overlap(bool*& a, bool*& b, int& test, int n);	
+void h0_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double d);
+void h1_pairs(bool*& a, bool*& b, double& energy, int n, double g);
+void h_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double g, double d);
+void zedangularmomentum(bool*& a, int& zedangmom, int omega, int n);
+void detectpairs(bool*& a, bool& test, int omega, int n);
+void zedangularmomentum_test(bool a [6][6], int& zedangmom, int omega, int n);
+void detectpairs_test(bool a [6][6], bool& test, int omega, int n);
+void construct_zproj_pairs_list(bool**& stateset, int*& list, int zed_am, int statecount, int omega, int n);
 void jacobi_simrot_eigen_solver(double**& A, double**& R, int size, double tolerance, int& count);
 void matrix_diag_sort(double**& A, double**&B, int size);
 
 
 int main(int argc, char* argv[]){
 	int n, p, omega, m, count, nchoosem, zpcount;
-	int onecount, zproj;
-	int i, j, k;
+	int zproj, counter;
+	int i, j, k, q;
 	bool test;
 	char* infile;
 	char* outfile;
@@ -61,10 +50,9 @@ int main(int argc, char* argv[]){
 	double** hamiltonian, **vectors, **eigenvalues;
 	double energy, g, d, tolerance;
 	tolerance = 1e-10;
-	d = 1;
 
-	if(argc<7){
-		cout << "Bad usage. Enter also 'level_count degeneracy particles g infilename outfilename' on same line." << endl;
+	if(argc<8){
+		cout << "Bad usage. Enter also 'level_count degeneracy particles level_spacing g infilename outfilename' on same line." << endl;
 		exit(1);
 	}
 	else{
@@ -72,9 +60,10 @@ int main(int argc, char* argv[]){
 		omega = atoi(argv[2]);
 		n = p*omega;
 		m = atoi(argv[3]);
-		g = atof(argv[4]);
-		infile = argv[5];
-		outfile = argv[6];
+		d = atof(argv[4]);
+		g = atof(argv[5]);
+		infile = argv[6];
+		outfile = argv[7];
 	}
 
 	choose(nchoosem, n, m);
@@ -92,6 +81,7 @@ int main(int argc, char* argv[]){
 	matrix_alloc(hamiltonian, nchoosem, nchoosem);
 	matrix_alloc(vectors, nchoosem, nchoosem);
 	matrix_alloc(eigenvalues, nchoosem, 2);
+
 	for(i=0;i<nchoosem;i++){
 		vectors[i][i] = 1.0;
 	}
@@ -103,35 +93,40 @@ int main(int argc, char* argv[]){
 	construct_stateset(stateset, count, n, m);
 
 	cout << endl;
-	cout << setw(10) << nchoosem << " nchoosem" << endl;
 	cout << setw(10) << count << " states" << endl;
 	cout << endl;
-
-	count_zedproj_pairs(stateset,list,0,nchoosem,omega,n);
+/**************************************
+Print states to screen	with
+	zprojection of state
+	even # of particles per level
+	zproj==0 && even # of particles
+**************************************/
 	for(i=0;i<nchoosem;i++){
 		zedangularmomentum(stateset[i], zproj, omega, n);
 		detectpairs(stateset[i], test, omega, n);
-		cout << setw(10);
+		cout << setw(10);		
 		for(j=0;j<n;j++){
 			cout << stateset[i][j];
 		}
-		cout << setw(10) << zproj << setw(10) << test;
-		if(zproj==0&&test==true){ 
-			cout << setw(10) << 1;
-		}
-		else{
-			cout << setw(10) << 0;
-		}
+		cout << setw(10) << zproj << setw(10) << test << setw(10) << (zproj==0&&test==1);
 		cout << endl;
 	}
 	cout << endl;
 
-	cout << setw(10) << zpcount;
+	construct_zproj_pairs_list(stateset, list, 0, nchoosem, omega, n);
+/**************************************
+Print list of states which meet
+	zproj==0 and even # per level
+**************************************/
 	for(i=0;i<zpcount;i++){
 		cout << setw(10) << list[i];
 	}
-	cout << endl << endl;
+	cout << endl;
+	cout << endl;
 
+/**********************
+Write hamiltonian file
+**********************/
 	ofile.open(outfile);
 	for(i=0;i<nchoosem;i++){
 		for(j=0;j<nchoosem;j++){
@@ -142,6 +137,11 @@ int main(int argc, char* argv[]){
 	}
 	ofile.close();
 
+/**********************
+Read hamiltonian to be
+diagonalized -------
+	for now use above
+**********************/
 	ifile.open(infile);
 	for(i=0;i<nchoosem;i++){
 		for(j=0;j<nchoosem;j++){
@@ -158,10 +158,12 @@ int main(int argc, char* argv[]){
 	}
 	cout << endl;
 
-
 	jacobi_simrot_eigen_solver(hamiltonian, vectors, nchoosem, tolerance, count);
 	matrix_diag_sort(hamiltonian, eigenvalues, nchoosem);
 
+/************************
+Print energies to screen
+************************/
 	for(i=0;i<nchoosem;i++){
 		cout << setw(10) << eigenvalues[i][1];
 	}
@@ -170,6 +172,10 @@ int main(int argc, char* argv[]){
 		cout << setw(10) << eigenvalues[i][0];
 	}
 	cout << endl;
+	cout << endl;
+/************************
+Print vectors to screen
+************************/
 	for(i=0;i<nchoosem;i++){
 		for(j=0;j<nchoosem;j++){
 			k = eigenvalues[j][1];
@@ -190,27 +196,27 @@ int main(int argc, char* argv[]){
 
 }
 
-inline void array_alloc(bool*& a, int n){
+void array_alloc(bool*& a, int n){
 	int i;
 	a = new bool[n];
 	for(i=0;i<n;i++){
 		a[i] = false;
 	}
 }
-inline void array_delete(bool*& a){
+void array_delete(bool*& a){
 	delete[] a;
 }
-inline void array_alloc(int*& a, int n){
+void array_alloc(int*& a, int n){
 	int i;
 	a = new int[n];
 	for(i=0;i<n;i++){
 		a[i] = 0;
 	}
 }
-inline void array_delete(int*& a){
+void array_delete(int*& a){
 	delete[] a;
 }
-inline void array_resize(int*& array, int oldsize, int newsize){
+void array_resize(int*& array, int oldsize, int newsize){
 	int* temp = new int[newsize];
 	for(int i=0;i<oldsize;i++){
 		temp[i]=array[i];
@@ -219,7 +225,7 @@ inline void array_resize(int*& array, int oldsize, int newsize){
 	delete[] array;
 	array = temp;
 }
-inline void matrix_alloc(bool**& a, int rows, int columns){
+void matrix_alloc(bool**& a, int rows, int columns){
 	int i, j;	
 	a = new bool*[rows];
 	for(i=0;i<rows;i++){
@@ -231,13 +237,13 @@ inline void matrix_alloc(bool**& a, int rows, int columns){
 		}
 	}
 }
-inline void matrix_delete(bool**& a, int rows){
+void matrix_delete(bool**& a, int rows){
 	for(int i=0;i<rows;i++){
 		delete a[i];
 	}
 	delete[] a;
 }
-inline void matrix_alloc(double**& a, int rows, int columns){
+void matrix_alloc(double**& a, int rows, int columns){
 	int i, j;	
 	a = new double*[rows];
 	for(i=0;i<rows;i++){
@@ -249,13 +255,13 @@ inline void matrix_alloc(double**& a, int rows, int columns){
 		}
 	}
 }
-inline void matrix_delete(double**& a, int rows){
+void matrix_delete(double**& a, int rows){
 	for(int i=0;i<rows;i++){
 		delete a[i];
 	}
 	delete[] a;
 }
-inline void factorial(int& factorial, int n){
+void factorial(int& factorial, int n){
 	int i;
 	if(n<0){
 		cout << "Bad usage of 'factorial.' Must choose a positive number." << endl;
@@ -266,7 +272,7 @@ inline void factorial(int& factorial, int n){
 		factorial *= i;
 	}
 }
-inline void choose(int& choose, int n, int m){
+void choose(int& choose, int n, int m){
 	int i, j, k;
 	choose = n;
 	if(m>n||m<0){
@@ -285,7 +291,7 @@ inline void choose(int& choose, int n, int m){
 		}
 	}
 }
-inline void construct_stateset(bool**& stateset, int& count, int n, int m){
+void construct_stateset(bool**& stateset, int& count, int n, int m){
 	int i, j;	
 	int* m_list;
 	
@@ -320,7 +326,7 @@ inline void construct_stateset(bool**& stateset, int& count, int n, int m){
 
 	array_delete(m_list);
 }
-inline void print_stateset(bool**& stateset, int statecount, int n){
+void print_stateset(bool**& stateset, int statecount, int n){
 	int i, j;
 	cout << endl;
 	for(i=0;i<statecount;i++){
@@ -331,13 +337,13 @@ inline void print_stateset(bool**& stateset, int statecount, int n){
 	}
 	cout << endl;
 }
-inline void create(bool*& a, int i){
+void create(bool*& a, int i){
 	a[i] = a[i]^true;
 }
-inline void annihilate(bool*& a, int i){
+void annihilate(bool*& a, int i){
 	a[i] = a[i]^true;
 }
-inline void countfilledstates(bool*& a, int& onecount, int n){	
+void countfilledstates(bool*& a, int& onecount, int n){	
 	onecount = 0;
 	int i;
 	for(i=0;i<n;i++){
@@ -346,7 +352,7 @@ inline void countfilledstates(bool*& a, int& onecount, int n){
 		}
 	}
 }
-inline void overlap(bool*& a, bool*& b, bool& test, int n){
+void overlap(bool*& a, bool*& b, bool& test, int n){
 	int stop, i;
 	bool* c;
 	array_alloc(c,n);
@@ -366,7 +372,7 @@ inline void overlap(bool*& a, bool*& b, bool& test, int n){
 
 	array_delete(c);
 }
-inline void overlap(bool*& a, bool*& b, int& test, int n){
+void overlap(bool*& a, bool*& b, int& test, int n){
 	int i;
 	bool* c;
 	array_alloc(c,n);
@@ -379,7 +385,7 @@ inline void overlap(bool*& a, bool*& b, int& test, int n){
 
 	array_delete(c);
 }
-inline void h0_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double d){
+void h0_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double d){
 	bool test;
 	int i, level;
 	energy = 0;
@@ -393,7 +399,7 @@ inline void h0_pairs(bool*& a, bool*& b, double& energy, int omega, int n, doubl
 		}
 	}
 }
-inline void h1_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double g){
+void h1_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double g){
 	int i, test;
 	energy = 0;
 	overlap(a,b,test,n);
@@ -408,7 +414,7 @@ inline void h1_pairs(bool*& a, bool*& b, double& energy, int omega, int n, doubl
 		energy = -g;
 	}
 }
-inline void h_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double g, double d){
+void h_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double g, double d){
 	int i, test, level;
 	energy = 0;
 	overlap(a,b,test,n);
@@ -429,35 +435,48 @@ inline void h_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double
 		energy = -g;
 	}
 }
-inline void zedangularmomentum(bool*& a, int& zedangmom, int omega, int n){
-	int i, zproj;
-	zedangmom = 0;
-	for(i=0;i<n;i++){
-		if(a[i]==true){
-			zproj = i%omega;
-			zproj = (omega - 1 - 2*zproj);
-			zedangmom += zproj;
+void zedangularmomentum(bool*& a, int& zproj, int omega, int n){
+	int j;	
+	zproj=0;
+	for(j=0;j<n;j++){
+		if(a[j]==true){
+			zproj += (omega - 1 - 2*(j%omega));
 		}
 	}
 }
-inline void detectpairs(bool*& a, bool& test, int omega, int n){
-	int count, mark, i;
+void detectpairs(bool*& a, bool& test, int omega, int n){
+	int j, pairtest;	
 	test = true;
-	for(i=0;i<n;i++){
-		mark = i%omega;
-		if(mark==0){
-			if(count%2==1){
+	pairtest = 0;
+	for(j=0;j<n;j++){
+		if(j%omega==0){
+			if(pairtest%2==1){
 				test = false;				
 				break;
 			}
-			count = 0;
+			else{
+				pairtest = 0;
+			}
 		}
-		if(a[i]==true){
-			count++;
+		if(a[j]==true){
+			pairtest++;
 		}
 	}
-	if(count%2==1){
+	if(pairtest%2==1){
 		test = false;
+	}
+}
+void construct_zproj_pairs_list(bool**& stateset, int*& list, int zed_am, int statecount, int omega, int n){
+	bool test;	
+	int i, counter, zproj;
+	counter = 0;
+	for(i=0;i<statecount;i++){
+		zedangularmomentum(stateset[i], zproj, omega, n);
+		detectpairs(stateset[i], test, omega, n);
+		if(zproj==zed_am&&test==true){
+			list[counter] = i;
+			counter++;
+		}
 	}
 }
 void jacobi_simrot_eigen_solver(double**& A, double**& R, int size, double tolerance, int& count){
