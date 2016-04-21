@@ -1,0 +1,24 @@
+A brief note on project2.cpp/project2.x:
+
+This program is currently in development, but I will refrain from updating the file currently listed here until such a time as it has been reviewed. Currently it can handle all requirements for the project with some additional features. Currently it outputs to screen
+
+	the predicted number of states (nchoosem)
+	the actual number of states (should match nchoosem)
+
+	TO BE REMOVED:	list of zprojections due to fix some sort of memory leak or issue with the code	
+
+	list of states plus 	zprojection		pair_test	zproj=0&&pair_test==true
+
+	count of states which have zproj==0&&pair_test==true 		list of said states
+
+	hamiltonian as created by program
+
+	original position of energy in diagonalized matrix
+	energies in order of E_0 ... E_(n-1)
+	state vector for each energy as column vector
+
+
+The list of zprojections will be removed, but it seems to solve the issue of the zproj&&pair_test function not working. Once I find the error in the code I will remove it. 
+
+If you wish to remove the matrix output, comment out the print states for the state vectors. I have kept all of the above largely as diagonstic tools, but each is useful to check for consistency at this simple stage.
+
