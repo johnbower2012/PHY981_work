@@ -74,7 +74,7 @@ int main(int argc, char* argv[]){
 				}
 			}
 
-			derive_hamiltonian_matrix(hamiltonian, temp, count, n, omega, d, g);
+			derive_hamiltonian_matrix_zproj0(hamiltonian, temp, count, n, omega, d, g);
 			if(printmatrix==true){
 				for(j=0;j<count;j++){
 					for(k=0;k<count;k++){
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]){
 				cout << " broken pairs";
 			}
 			cout << setw(10) << count << " states: " << setw(10) << "energy" << setw(10) << eigenvalues[0][0] << endl;
-				if(printstates==true){
+			if(printstates==true){
 				cout << endl;
 				for(j=0;j<count;j++){
 					cout << setw(10);
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]){
 			cout << endl;
 			for(j=0;j<nchoosem;j++){
 				for(k=0;k<nchoosem;k++){
-					cout << setw(10) << hamiltonian[j][k];
+					cout << setw(10) << hamil[j][k];
 				}
 				cout << endl;
 			}

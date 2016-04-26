@@ -426,7 +426,6 @@ void operator_hamiltonian_1_zproj0(bool*& state, double& energy, int r, int s, i
 				operator_create(state, test, phase, r);
 				if(test==true){
 					finalphase = finalphase^phase;
-					cout << finalphase << setw(10) << r << setw(10) << s << endl;
 					if(finalphase==false){
 						energy = -g;
 					}
@@ -477,25 +476,26 @@ void derive_hamiltonian_matrix_zproj0(double**& hamiltonian, bool**& stateset, i
 		for(i=0;i<statecount;i++){
 			energysum = 0;
 			for(j=0;j<n/omega;j++){
-			jomega = j*omega;
-			for(w=0;w<omega/2;w++){
-			jomegaw = jomega + w;
-				for(k=0;k<n/omega;k++){
-				komega = k*omega;
-				for(e=0;e<omega/2;e++){
-					for(q=0;q<n;q++){
-							temp[q] = stateset[i][q];
-					}
-					operator_hamiltonian_1_zproj0(temp, energy, jomegaw, komega+e, n, omega, g);
-					if(energy==-g||energy==g){
-						overlap(stateset[z], temp, test, n);
-						if(test==true){
-							energysum += energy;
+				jomega = j*omega;
+				for(w=0;w<omega/2;w++){
+					jomegaw = jomega + w;
+						for(k=0;k<n/omega;k++){
+						komega = k*omega;
+						for(e=0;e<omega/2;e++){
+							for(q=0;q<n;q++){
+								temp[q] = stateset[i][q];
+							}
+							operator_hamiltonian_1_zproj0(temp, energy, jomegaw, komega+e, n, omega, g);
+							if(energy==-g||energy==g){
+								overlap(stateset[z], temp, test, n);
+								if(test==true){
+									energysum += energy;
+								}
+							}
+							cout << energy << endl;
 						}
 					}
 				}
-				}
-			}
 			}
 			if(i==z){
 				operator_hamiltonian_0(stateset[i], energy, n, omega, d);

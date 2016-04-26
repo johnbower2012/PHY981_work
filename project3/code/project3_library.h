@@ -465,7 +465,7 @@ void operator_hamiltonian_1(bool*& state, double& energy, int p, int q, int r, i
 		}
 	}
 }
-void derive_hamiltonian_matrix_zproj0(double**& hamiltonian, bool**& stateset, int statecount, int n, int omega, int d, int g){
+void derive_hamiltonian_matrix_zproj0(double**& hamiltonian, bool**& stateset, int statecount, int n, int omega, double d, double g){
 	int i, j, k, q, z, w, e, jomega, komega, jomegaw;
 	double energy, energysum;
 	bool test;
@@ -483,7 +483,7 @@ void derive_hamiltonian_matrix_zproj0(double**& hamiltonian, bool**& stateset, i
 						komega = k*omega;
 						for(e=0;e<omega/2;e++){
 							for(q=0;q<n;q++){
-									temp[q] = stateset[i][q];
+								temp[q] = stateset[i][q];
 							}
 							operator_hamiltonian_1_zproj0(temp, energy, jomegaw, komega+e, n, omega, g);
 							if(energy==-g||energy==g){
@@ -505,7 +505,7 @@ void derive_hamiltonian_matrix_zproj0(double**& hamiltonian, bool**& stateset, i
 	}	
 	array_delete(temp);
 }
-void derive_hamiltonian_matrix(double**& hamiltonian, bool**& stateset, int statecount, int n, int omega, int d, int g){
+void derive_hamiltonian_matrix(double**& hamiltonian, bool**& stateset, int statecount, int n, int omega, double d, double g){
 	int z, i, j, k, x, c, q, levels, r, s;
 	int jomega, xomega, jomegak, jomegar, xomegac;
 	double energy, energysum;
