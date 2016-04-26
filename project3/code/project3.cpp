@@ -10,23 +10,22 @@ ofstream ofile;
 ifstream ifile;
 
 int main(int argc, char* argv[]){
-	bool test, printmatrix, printvectors, zproj0;
-	bool** stateset;
+	bool test, printmatrix, printstates, blockdiag;
+	bool** stateset, **temp;
 
-	int n, p, omega, m, count, nchoosem, zpcount;
-	int zproj, counter;
-	int i, j, k, q, number;
+	int n, p, omega, m, count, nchoosem, counter;
+	int i, j, k, q;
 	int* list;
 
 	char* infile;
 	char* outfile;
 
 	double energy, g, d, tolerance;
-	double** hamiltonian, **vectors, **eigenvalues;
+	double** hamiltonian, **hamil, **vectors, **eigenvalues;
 	tolerance = 1e-10;
 
 	if(argc<9){
-		cout << "Bad usage. Enter also 'level_count degeneracy particles level_spacing g bool_printmatrix bool_printvectors bool_0_1' on same line." << endl;
+		cout << "Bad usage. Enter also 'level_count degeneracy particles level_spacing g bool_printstates bool_printmatrix bool_0_1' on same line." << endl;
 		exit(1);
 	}
 	else{
@@ -36,124 +35,148 @@ int main(int argc, char* argv[]){
 		m = atoi(argv[3]);
 		d = atof(argv[4]);
 		g = atof(argv[5]);
-		printmatrix = atoi(argv[6]);
-		printvectors = atoi(argv[7]);
-		zproj0 = atoi(argv[8]);
+		printstates = atoi(argv[6]);
+		printmatrix = atoi(argv[7]);
+		blockdiag = atoi(argv[8]);
 	}
 
 	choose(nchoosem, n, m);
-	if(m%2==0){
-		if(omega%2==0){
-			choose(zpcount, p*omega/2, m/2);
-		}
-		else{
-			choose(zpcount, p*(omega-1)/2, m/2);
-		}
-	}
-	else if(m%2==1){
-		zpcount = 0;
-	}
-
-	array_alloc(list,zpcount);
 	matrix_alloc(stateset, nchoosem, n);
-	matrix_alloc(hamiltonian, nchoosem, nchoosem);
-	matrix_alloc(vectors, nchoosem, nchoosem);
-	matrix_alloc(eigenvalues, nchoosem, 2);
-
-	for(i=0;i<nchoosem;i++){
-		vectors[i][i] = 1.0;
-	}
-	for(i=0;i<nchoosem;i++){
-		eigenvalues[i][0] = 0;
-		eigenvalues[i][1] = -1;
-	}
-
 	construct_stateset(stateset, count, n, m);
 
-/**************************************
-Print states to screen	with
-	zprojection of state
-	even # of particles per level
-	zproj==0 && even # of particles
-**************************************/
-	cout << endl << "States:" << endl;
-	for(i=0;i<nchoosem;i++){
-		zedangularmomentum(stateset[i], zproj, omega, n);
-		detectpairs(stateset[i], test, omega, n);
-		cout << setw(10) << i << setw(10);	
-		for(j=0;j<n;j++){
-			cout << stateset[i][j];
-		}
-		cout << setw(10) << zproj << setw(10) << test << setw(10) << (zproj==0&&test==1);
-		cout << endl;
-	}
 	cout << endl;
+	cout << "p=" << p << setw(10) << "omega=" << omega << setw(10) << "m=" << m << setw(10) << "d=" << d << setw(10) << "g=" << g << endl;
+	cout << endl;
+	if(blockdiag==true){
+		for(q=0;q<m/2+1;q++){
+			count_brokenpairstates(count, n, omega, m, q);
+			if(count==0){
+				break;
+			}
+			array_alloc(list,count);
+			matrix_alloc(temp, count, n);
+			matrix_alloc(hamiltonian, count, count);
+			matrix_alloc(hamil, count, count);
+			matrix_alloc(vectors, count, count);
+			matrix_alloc(eigenvalues, count, 2);
+			for(j=0;j<count;j++){
+				vectors[j][j] = 1.0;
+			}
+			for(j=0;j<count;j++){
+				eigenvalues[j][0] = 0;
+				eigenvalues[j][1] = -1;
+			}
 
-	if(zproj0==true){
-		derive_hamiltonian_matrix_zproj0(hamiltonian, stateset, nchoosem, n, omega, d, g);
+			construct_brokenpairs_list(stateset, list, nchoosem, n, omega, q);
+			for(j=0;j<count;j++){
+				for(k=0;k<n;k++){
+					temp[j][k] = stateset[list[j]][k];
+				}
+			}
+
+			derive_hamiltonian_matrix(hamiltonian, temp, count, n, omega, d, g);
+			if(printmatrix==true){
+				for(j=0;j<count;j++){
+					for(k=0;k<count;k++){
+						hamil[j][k] = hamiltonian[j][k];
+					}
+				}
+			}
+
+			jacobi_simrot_eigen_solver(hamiltonian, vectors, count, tolerance, counter);
+			matrix_diag_sort(hamiltonian, eigenvalues, count);
+			cout << setw(10) << q;
+			if(q==1){
+				cout << " broken pair";
+			}
+			else{
+				cout << " broken pairs";
+			}
+			cout << setw(10) << count << " states: " << setw(10) << "energy" << setw(10) << eigenvalues[0][0] << endl;
+				if(printstates==true){
+				cout << endl;
+				for(j=0;j<count;j++){
+					cout << setw(10);
+					for(k=0;k<n;k++){
+						cout << temp[j][k];
+					}
+					cout << endl;
+				}
+			}
+			if(printmatrix==true){
+				cout << endl;
+				for(j=0;j<count;j++){
+					for(k=0;k<count;k++){
+						cout << setw(10) << hamil[j][k];
+					}
+					cout << endl;
+				}
+			}
+			cout << endl;
+			array_delete(list);
+			matrix_delete(temp, count);
+			matrix_delete(hamil, count);
+			matrix_delete(hamiltonian, count);
+			matrix_delete(vectors, count);
+			matrix_delete(eigenvalues, count);	
+		}
 	}
-	else if(zproj0==false){
+	else if(blockdiag==false){
+		matrix_alloc(hamil, nchoosem, nchoosem);
+		matrix_alloc(hamiltonian, nchoosem, nchoosem);
+		matrix_alloc(vectors, nchoosem, nchoosem);
+		matrix_alloc(eigenvalues, nchoosem, 2);
+		for(j=0;j<nchoosem;j++){
+		vectors[j][j] = 1.0;
+			}
+		for(j=0;j<nchoosem;j++){
+			eigenvalues[j][0] = 0;
+			eigenvalues[j][1] = -1;
+		}
+
 		derive_hamiltonian_matrix(hamiltonian, stateset, nchoosem, n, omega, d, g);
-	}
-	if(printmatrix==true){
-		cout << endl;
-		cout << "Hamiltonian:" << endl;
-		for(i=0;i<nchoosem;i++){
+		if(printmatrix==true){
 			for(j=0;j<nchoosem;j++){
-				cout << setw(9) << hamiltonian[i][j];
+				for(k=0;k<nchoosem;k++){
+					hamil[j][k] = hamiltonian[j][k];
+				}
 			}
+		}
+		jacobi_simrot_eigen_solver(hamiltonian, vectors, nchoosem, tolerance, counter);
+		matrix_diag_sort(hamiltonian, eigenvalues, nchoosem);
+
+		for(j=0;j<nchoosem;j++){
+			cout << setw(10) << eigenvalues[j][0] << setw(10) << eigenvalues[j][1] << endl;
+		}
+		if(printstates==true){
 			cout << endl;
-		}
-		cout << endl;
-	}
-
-	jacobi_simrot_eigen_solver(hamiltonian, vectors, nchoosem, tolerance, count);
-	matrix_diag_sort(hamiltonian, eigenvalues, nchoosem);
-
-/************************
-Print energies to screen
-************************/
-
-	if(printmatrix==1||printvectors==1){
-		cout << "original position & energy" << endl;
-		for(i=0;i<nchoosem;i++){
-			cout << setw(10) << eigenvalues[i][1];
-		}
-		cout << endl;
-		for(i=0;i<nchoosem;i++){
-			cout << setw(10) << eigenvalues[i][0];
-		}
-		cout << endl;
-		cout << endl;
-	}
-	else if(printmatrix==0&&printvectors==0){
-		for(i=nchoosem-1;i>-1;i--){
-			cout << setw(10) << eigenvalues[i][0] << setw(10) << eigenvalues[i][1];
-			cout << endl;
-		}
-		cout << "energy & original position" << endl;
-	}
-
-/************************
-Print vectors to screen
-************************/
-	if(printvectors==true){
-		for(i=0;i<nchoosem;i++){
 			for(j=0;j<nchoosem;j++){
-				k = eigenvalues[j][1];
-				cout << setw(10) << vectors[i][k];
+				cout << setw(10);
+				for(k=0;k<n;k++){
+					cout << stateset[j][k];
+				}
+				cout << endl;
 			}
+		}
+		if(printmatrix==true){
 			cout << endl;
-		}	
+			for(j=0;j<nchoosem;j++){
+				for(k=0;k<nchoosem;k++){
+					cout << setw(10) << hamiltonian[j][k];
+				}
+				cout << endl;
+			}
+		}
 		cout << endl;
-	}
 
-	array_delete(list);
+		matrix_delete(hamil, nchoosem);
+		matrix_delete(hamiltonian, nchoosem);
+		matrix_delete(vectors, nchoosem);
+		matrix_delete(eigenvalues, nchoosem);	
+	}
 	matrix_delete(stateset, nchoosem);
-	matrix_delete(hamiltonian, nchoosem);
-	matrix_delete(vectors, nchoosem);
-	matrix_delete(eigenvalues, nchoosem);
 
+	cout << endl;
 	return 0;
 
 }

@@ -1,0 +1,4 @@
+The energy gap between 'i' broken pairs and 'i+1' broken pairs is given by
+
+	(g/2)*(omega-4i).
+

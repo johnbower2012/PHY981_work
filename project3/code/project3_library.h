@@ -22,7 +22,8 @@ void choose(int& choose, int n, int m);
 void count_brokenpairstates(int& count, int n, int omega, int m, int brokenpairs);
 void construct_stateset(bool**& stateset, int& count, int n, int m);
 void print_stateset(bool**& stateset, int statecount, int n);
-void countfilledstates(bool*& a, int& onecount, int n);
+void count_filledstates(bool*& a, int& onecount, int n);
+void construct_brokenpairs_list(bool**& stateset, int*& list, int statecount, int n, int omega, int brokenpairs);
 void overlap(bool*& a, bool*& b, bool& test, int n);
 void overlap(bool*& a, bool*& b, int& test, int n);	
 void h0_pairs(bool*& a, bool*& b, double& energy, int omega, int n, double d);
@@ -143,22 +144,41 @@ void count_brokenpairstates(int& count, int n, int omega, int m, int brokenpairs
 	if(m%2==0){
 		holder = m/2 - brokenpairs;
 		choose(count, n/omega, holder);
-		cout << count << '\t';
 		for(i=0;i<2*brokenpairs;i++){
 			count *= (n - 2*(i+holder));
 			count /= (i+1);
 		}
-		cout << count << endl;
 	}
 	else if(m%2==1){
 		holder = (m-1)/2 - brokenpairs;
-		choose(count, n/omega, holder);
-		cout << count << '\t';		
+		choose(count, n/omega, holder);		
 		for(i=0;i<2*brokenpairs+1;i++){
 			count *= (n - 2*(i+holder));
 			count /= (i+1);
 		}
-		cout << count << endl;
+	}
+}
+void construct_brokenpairs_list(bool**& stateset, int*& list, int statecount, int n, int omega, int brokenpairs){
+	int i, j, k, count, marker, nomega;
+	bool test;
+	marker = 0;
+	for(i=0;i<statecount;i++){
+		count = 0;
+		for(j=0;j<n/omega;j++){
+			nomega = j*omega;
+			test = false;
+			for(k=0;k<omega;k++){
+				test = test^stateset[i][nomega+k];
+			}
+			if(test==true){
+				count++;
+			}
+		}
+		count /= 2;
+		if(count==brokenpairs){
+			list[marker] = i;
+			marker++;
+		}
 	}
 }
 void construct_stateset(bool**& stateset, int& count, int n, int m){
@@ -390,20 +410,20 @@ void operator_hamiltonian_1_zproj0(bool*& state, double& energy, int r, int s, i
 	energy = 0;
 	finalphase = false;
 
-	operator_annihilate(state, test, phase, r);
+	operator_annihilate(state, test, phase, s);
 	if(test==true){
 		finalphase = finalphase^phase;
-		level = r/omega;
-		partner = (level+1)*omega - 1 - r%omega;
+		level = s/omega;
+		partner = (level+1)*omega - 1 - s%omega;
 		operator_annihilate(state, test, phase, partner);
 		if(test==true){
 			finalphase = finalphase^phase;
-			operator_create(state, test, phase, s);
+			level = r/omega;
+			partner = (level+1)*omega - 1 - r%omega;
+			operator_create(state, test, phase, partner);
 			if(test==true){
 				finalphase = finalphase^phase;
-				level = s/omega;
-				partner = (level+1)*omega - 1 - s%omega;
-				operator_create(state, test, phase, partner);
+				operator_create(state, test, phase, r);
 				if(test==true){
 					finalphase = finalphase^phase;
 					if(finalphase==false){
@@ -446,7 +466,7 @@ void operator_hamiltonian_1(bool*& state, double& energy, int p, int q, int r, i
 	}
 }
 void derive_hamiltonian_matrix_zproj0(double**& hamiltonian, bool**& stateset, int statecount, int n, int omega, int d, int g){
-	int i, j, k, q, z;
+	int i, j, k, q, z, w, e, jomega, komega, jomegaw;
 	double energy, energysum;
 	bool test;
 	bool*temp;
@@ -455,21 +475,27 @@ void derive_hamiltonian_matrix_zproj0(double**& hamiltonian, bool**& stateset, i
 	for(z=0;z<statecount;z++){
 		for(i=0;i<statecount;i++){
 			energysum = 0;
-			for(j=0;j<n;j++){
-				for(k=0;k<n;k++){
-					for(q=0;q<n;q++){
-						temp[q] = stateset[i][q];
-					}
-					operator_hamiltonian_1_zproj0(temp, energy, j, k, n, omega, g);
-					if(energy==-g||energy==g){
-						overlap(stateset[z], temp, test, n);
-						if(test==true){
-							energysum += energy;
+			for(j=0;j<n/omega;j++){
+				jomega = j*omega;
+				for(w=0;w<omega/2;w++){
+					jomegaw = jomega + w;
+						for(k=0;k<n/omega;k++){
+						komega = k*omega;
+						for(e=0;e<omega/2;e++){
+							for(q=0;q<n;q++){
+									temp[q] = stateset[i][q];
+							}
+							operator_hamiltonian_1_zproj0(temp, energy, jomegaw, komega+e, n, omega, g);
+							if(energy==-g||energy==g){
+								overlap(stateset[z], temp, test, n);
+								if(test==true){
+									energysum += energy;
+								}
+							}
 						}
 					}
 				}
 			}
-			energysum /= 4;
 			if(i==z){
 				operator_hamiltonian_0(stateset[i], energy, n, omega, d);
 				energysum += energy;

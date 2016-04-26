@@ -10,7 +10,7 @@ using namespace std;
 ofstream ofile;
 
 int main(int argc, char* argv[]){
-	bool test, printmatrix, printvectors;
+	bool test, printmatrix, printvectors, choice;
 	bool** stateset;
 
 	int n, p, omega, m, count, nchoosem, zpcount;
@@ -27,17 +27,17 @@ int main(int argc, char* argv[]){
 	clock_t start, finish;
 
 	if(argc<7){
-		cout << "Bad usage. Enter also 'level_count degeneracy particles level_spacing g outfilename' on same line." << endl;
+		cout << "Bad usage. Enter also 'level_count degeneracy level_spacing g outfilename bool_choice' on same line." << endl;
 		exit(1);
 	}
 	else{
 		p = atoi(argv[1]);
 		omega = atoi(argv[2]);
 		n = p*omega;
-		m = atoi(argv[3]);
-		d = atof(argv[4]);
-		g = atof(argv[5]);
-		outfile = argv[6];
+		d = atof(argv[3]);
+		g = atof(argv[4]);
+		outfile = argv[5];
+		choice = atoi(argv[6]);
 	}
 	
 	ofile.open(outfile);
@@ -56,7 +56,12 @@ int main(int argc, char* argv[]){
 		start = clock();
 
 		construct_stateset(stateset, count, n, m);
-		derive_hamiltonian_matrix_zproj0(hamiltonian, stateset, nchoosem, n, omega, d, g);
+		if(choice==false){
+			derive_hamiltonian_matrix(hamiltonian, stateset, nchoosem, n, omega, d, g);
+		}
+		else if(choice==true){
+			derive_hamiltonian_matrix_zproj0(hamiltonian, stateset, nchoosem, n, omega, d, g);
+		}
 
 		finish = clock();		
 
