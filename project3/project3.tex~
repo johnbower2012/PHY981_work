@@ -1,0 +1,56 @@
+\documentclass[11 pt, a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\lstset{language=c++}
+\lstset{basicstyle=\tiny}
+\lstset{backgroundcolor=\color{white}}
+\lstset{frame=single}
+
+\title{PHY981 Exercise 2}
+\author{John Bower}
+\date{February 17 2016}
+
+\begin{document}
+\maketitle
+
+\section{Section}
+\[
+\hat{P}^{+}_p = a^\dag_{p+}a^\dag_{p-},
+\]
+and
+\[
+\hat{P}^{-}_p = a_{p-}a_{p+},
+\] 
+respectively.
+
+The Hamiltonian (with $\xi=1$) we will use can be written as
+\[
+\hat{H}=\xi\sum_{p\sigma}(p-1)a_{p\sigma}^{\dagger}a_{p\sigma}
+-g\sum_{pq}\hat{P}^{+}_p\hat{P}^{-}_q.
+\]
+
+\begin{align*}
+
+P^{+}_p &= a^\dag_{p+}a^\dag_{p-} \\
+
+P^{-}_p &= a_{p-}a_{p+} \\
+
+
+H&=\xi\sum_{p\sigma}(p-1)a_{p\sigma}^{\dagger}a_{p\sigma}
+-g\sum_{pq}a^\dag_{p+}a^\dag_{p-}a_{p-}a_{p+} \\
+
+
+
+
+H&=\Xi\sum_{p\sigma}(p-1)a_{p\sigma}^{\dagger}a_{p\sigma}
+-g\sum_{pq}\hat{P}^{+}_p\hat{P}^{-}_q
+
+\end{align*}
+
+\end{document}
